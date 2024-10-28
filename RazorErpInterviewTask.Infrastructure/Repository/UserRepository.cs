@@ -17,18 +17,20 @@ namespace RazorErpInterviewTask.Infrastructure.Repository
 {
     public class UserRepository : IUserRepository<User, UserAddUpdate, UserLogin>
     {
+        private readonly DapperDbContext _dapperDbContext;
         private readonly IConfiguration _configuration;
-        public UserRepository(IConfiguration configuration)
+
+        public UserRepository(DapperDbContext dapperDbContext, IConfiguration configuration)
         {
+            _dapperDbContext = dapperDbContext;
             _configuration = configuration;
         }
 
         public async Task<int> AddAsync(UserAddUpdate entity)
         {
             var sql = "INSERT INTO [dbo].[User] (Username, Password, FirstName, LastName, Company, Role) VALUES (@Username, @Password, @FirstName, @LastName, @Company, @Role)";
-            using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
+            using (var connection = _dapperDbContext.CreateConnection())
             {
-                connection.Open();
                 var result = await connection.ExecuteAsync(sql, entity);
                 return result;
             }
@@ -37,9 +39,8 @@ namespace RazorErpInterviewTask.Infrastructure.Repository
         public async Task<int> DeleteAsync(int id)
         {
             var sql = "DELETE FROM [dbo].[User] WHERE Id = @Id";
-            using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
+            using (var connection = _dapperDbContext.CreateConnection())
             {
-                connection.Open();
                 var result = await connection.ExecuteAsync(sql, new { Id = id });
                 return result;
             }
@@ -48,10 +49,8 @@ namespace RazorErpInterviewTask.Infrastructure.Repository
         public async Task<IEnumerable<User>> GetAllAsync(string role, string company)
         {
             var sql = "SELECT * FROM [dbo].[User]";
-            using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
+            using (var connection = _dapperDbContext.CreateConnection())
             {
-                connection.Open();
-
                 var parameters = new DynamicParameters();
 
                 if (role.Equals("User", StringComparison.OrdinalIgnoreCase))
@@ -72,10 +71,8 @@ namespace RazorErpInterviewTask.Infrastructure.Repository
             var parameters = new DynamicParameters();
             parameters.Add("Id", id);
 
-            using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
+            using (var connection = _dapperDbContext.CreateConnection())
             {
-                connection.Open();
-
                 if (role.Equals("User", StringComparison.OrdinalIgnoreCase))
                 {
                     sql = sql + " AND Role = @Role AND Company = @Company";
@@ -92,10 +89,8 @@ namespace RazorErpInterviewTask.Infrastructure.Repository
         {
 
             var sql = "UPDATE [dbo].[User] SET Username = @Username, Password = @Password, FirstName = @FirstName, LastName = @LastName, Company = @Company, [Role] = @Role WHERE Id = @Id";
-            using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
+            using (var connection = _dapperDbContext.CreateConnection())
             {
-                connection.Open();
-
                 var parameters = new DynamicParameters();
                 parameters.Add("Username", entity.Username);
                 parameters.Add("Password", entity.Password); 
@@ -115,10 +110,8 @@ namespace RazorErpInterviewTask.Infrastructure.Repository
             
 
             var sql = "SELECT * FROM [dbo].[User] WHERE Username = @Username AND Password = @Password";
-            using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
+            using (var connection = _dapperDbContext.CreateConnection())
             {
-                connection.Open();
-
                 var parameters = new DynamicParameters();
                 parameters.Add("Username", user.Username);
                 parameters.Add("Password", user.Password);

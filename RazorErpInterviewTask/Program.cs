@@ -19,6 +19,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Register repositories and services
 builder.Services.AddScoped<IUserRepository<User, UserAddUpdate, UserLogin>, UserRepository>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<DapperDbContext>();
 
 //disallow to make > 10 requests from 1 user per minute
 builder.Services.AddRateLimiter(options =>
