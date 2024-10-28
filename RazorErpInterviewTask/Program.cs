@@ -24,6 +24,7 @@ builder.Services.AddScoped<DapperDbContext>();
 //disallow to make > 10 requests from 1 user per minute
 builder.Services.AddRateLimiter(options =>
 {
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpcontext =>
     RateLimitPartition.GetFixedWindowLimiter(
         partitionKey: httpcontext.Request.Headers.Host.ToString(),

@@ -18,51 +18,48 @@ namespace RazorErpInterviewTask.Infrastructure.Repository
     public class UserRepository : IUserRepository<User, UserAddUpdate, UserLogin>
     {
         private readonly DapperDbContext _dapperDbContext;
+        private readonly IDbConnection _dbConnection;
         private readonly IConfiguration _configuration;
 
         public UserRepository(DapperDbContext dapperDbContext, IConfiguration configuration)
         {
             _dapperDbContext = dapperDbContext;
+            _dbConnection = _dapperDbContext.CreateConnection();
             _configuration = configuration;
         }
 
         public async Task<int> AddAsync(UserAddUpdate entity)
         {
             var sql = "INSERT INTO [dbo].[User] (Username, Password, FirstName, LastName, Company, Role) VALUES (@Username, @Password, @FirstName, @LastName, @Company, @Role)";
-            using (var connection = _dapperDbContext.CreateConnection())
-            {
-                var result = await connection.ExecuteAsync(sql, entity);
-                return result;
-            }
+
+            var result = await _dbConnection.ExecuteAsync(sql, entity);
+            return result;
         }
 
         public async Task<int> DeleteAsync(int id)
         {
             var sql = "DELETE FROM [dbo].[User] WHERE Id = @Id";
-            using (var connection = _dapperDbContext.CreateConnection())
-            {
-                var result = await connection.ExecuteAsync(sql, new { Id = id });
-                return result;
-            }
+
+            var result = await _dbConnection.ExecuteAsync(sql, new { Id = id });
+            return result;
+
         }
 
         public async Task<IEnumerable<User>> GetAllAsync(string role, string company)
         {
             var sql = "SELECT * FROM [dbo].[User]";
-            using (var connection = _dapperDbContext.CreateConnection())
+            
+            var parameters = new DynamicParameters();
+
+            if (role.Equals("User", StringComparison.OrdinalIgnoreCase))
             {
-                var parameters = new DynamicParameters();
-
-                if (role.Equals("User", StringComparison.OrdinalIgnoreCase))
-                {
-                    sql = sql + " WHERE Role = @Role AND Company = @Company";
-                    parameters.Add("Role", 2);
-                    parameters.Add("Company", company);
-                }
-
-                var result = await connection.QueryAsync<User>(sql, parameters);
-                return result.ToList();
+                sql = sql + " WHERE Role = @Role AND Company = @Company";
+                parameters.Add("Role", 2);
+                parameters.Add("Company", company);
             }
+
+            var result = await _dbConnection.QueryAsync<User>(sql, parameters);
+            return result.ToList();
         }
 
         public async Task<User> GetByIdAsync(int id, string role, string company)
@@ -71,59 +68,50 @@ namespace RazorErpInterviewTask.Infrastructure.Repository
             var parameters = new DynamicParameters();
             parameters.Add("Id", id);
 
-            using (var connection = _dapperDbContext.CreateConnection())
+            if (role.Equals("User", StringComparison.OrdinalIgnoreCase))
             {
-                if (role.Equals("User", StringComparison.OrdinalIgnoreCase))
-                {
-                    sql = sql + " AND Role = @Role AND Company = @Company";
-                    parameters.Add("Role", 2);
-                    parameters.Add("Company", company);
-                }
-
-                var result = await connection.QuerySingleOrDefaultAsync<User>(sql, parameters);
-                return result;
+                sql = sql + " AND Role = @Role AND Company = @Company";
+                parameters.Add("Role", 2);
+                parameters.Add("Company", company);
             }
+
+            var result = await _dbConnection.QuerySingleOrDefaultAsync<User>(sql, parameters);
+            return result;
         }
 
         public async Task<int> UpdateAsync(int id, UserAddUpdate entity)
         {
 
             var sql = "UPDATE [dbo].[User] SET Username = @Username, Password = @Password, FirstName = @FirstName, LastName = @LastName, Company = @Company, [Role] = @Role WHERE Id = @Id";
-            using (var connection = _dapperDbContext.CreateConnection())
-            {
-                var parameters = new DynamicParameters();
-                parameters.Add("Username", entity.Username);
-                parameters.Add("Password", entity.Password); 
-                parameters.Add("FirstName", entity.FirstName);
-                parameters.Add("LastName", entity.Lastname);
-                parameters.Add("Company", entity.Company);
-                parameters.Add("Role", entity.Role);
-                parameters.Add("Id", id);
 
-                var result = await connection.ExecuteAsync(sql, parameters);
-                return result;
-            }
+            var parameters = new DynamicParameters();
+            parameters.Add("Username", entity.Username);
+            parameters.Add("Password", entity.Password); 
+            parameters.Add("FirstName", entity.FirstName);
+            parameters.Add("LastName", entity.Lastname);
+            parameters.Add("Company", entity.Company);
+            parameters.Add("Role", entity.Role);
+            parameters.Add("Id", id);
+
+            var result = await _dbConnection.ExecuteAsync(sql, parameters);
+            return result;
         }
 
         public async Task<string> Auth(UserLogin user)
         {
-            
-
             var sql = "SELECT * FROM [dbo].[User] WHERE Username = @Username AND Password = @Password";
-            using (var connection = _dapperDbContext.CreateConnection())
+
+            var parameters = new DynamicParameters();
+            parameters.Add("Username", user.Username);
+            parameters.Add("Password", user.Password);
+
+            var result = await _dbConnection.QueryAsync<User>(sql, parameters);
+
+            if (result.Count() > 0)
             {
-                var parameters = new DynamicParameters();
-                parameters.Add("Username", user.Username);
-                parameters.Add("Password", user.Password);
-
-                var result = await connection.QueryAsync<User>(sql, parameters);
-
-                if (result.Count() > 0)
-                {
-                    return GenerateToken(result.FirstOrDefault());
-                }
-
+                return GenerateToken(result.FirstOrDefault());
             }
+
 
             return string.Empty;
         }
