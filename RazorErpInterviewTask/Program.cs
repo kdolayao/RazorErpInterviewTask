@@ -60,7 +60,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddSwaggerGen(options =>
 {
-    options.SwaggerDoc("v1", new OpenApiInfo { Title = "Your API Title", Version = "v1" });
+    options.SwaggerDoc("v1", new OpenApiInfo { Title = "RazorErpInterviewTask", Version = "v1" });
 
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
