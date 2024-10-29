@@ -64,15 +64,16 @@ namespace RazorErpInterviewTask.Infrastructure.Repository
 
         public async Task<User> GetByIdAsync(int id, string role, string company)
         {
-            var sql = "SELECT * FROM [dbo].[User] WHERE Id = @Id";
+            var sql = "SELECT * FROM [dbo].[User] WHERE Id = @Id  AND Company = @Company";
             var parameters = new DynamicParameters();
             parameters.Add("Id", id);
+            parameters.Add("Company", company);
 
             if (role.Equals("User", StringComparison.OrdinalIgnoreCase))
             {
-                sql = sql + " AND Role = @Role AND Company = @Company";
+                sql = sql + " AND Role = @Role";
                 parameters.Add("Role", 2);
-                parameters.Add("Company", company);
+                
             }
 
             var result = await _dbConnection.QuerySingleOrDefaultAsync<User>(sql, parameters);
