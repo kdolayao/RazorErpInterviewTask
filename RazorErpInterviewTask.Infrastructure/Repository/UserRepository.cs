@@ -45,17 +45,17 @@ namespace RazorErpInterviewTask.Infrastructure.Repository
 
         }
 
-        public async Task<IEnumerable<User>> GetAllAsync(string role, string company)
+        public async Task<IEnumerable<User>> GetAllUsersByCompanyAsync(string role, string company)
         {
-            var sql = "SELECT * FROM [dbo].[User]";
+            var sql = "SELECT * FROM [dbo].[User] WHERE Company = @Company";
             
             var parameters = new DynamicParameters();
+            parameters.Add("Company", company);
 
             if (role.Equals("User", StringComparison.OrdinalIgnoreCase))
             {
-                sql = sql + " WHERE Role = @Role AND Company = @Company";
+                sql = sql + " AND Role = @Role";
                 parameters.Add("Role", 2);
-                parameters.Add("Company", company);
             }
 
             var result = await _dbConnection.QueryAsync<User>(sql, parameters);

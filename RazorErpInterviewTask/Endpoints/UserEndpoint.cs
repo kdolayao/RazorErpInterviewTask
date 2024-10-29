@@ -16,7 +16,7 @@ namespace RazorErpInterviewTask.WebApi.Endpoints
                 var role = GetClaimValue(userClaim, 2); //Get role
                 var company = GetClaimValue(userClaim, 3); //Get companyname
 
-                var users = await userService.GetAllUsersAsync(role, company);
+                var users = await userService.GetAllUsersByCompanyAsync(role, company);
                 return Results.Ok(users);
             }).RequireAuthorization();
 

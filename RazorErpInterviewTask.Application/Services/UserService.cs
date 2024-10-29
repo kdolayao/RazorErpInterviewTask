@@ -25,9 +25,9 @@ namespace RazorErpInterviewTask.Application.Services
             return await _userRepository.GetByIdAsync(id, role, company);
         }
 
-        public async Task<IEnumerable<User>> GetAllUsersAsync(string role, string company)
+        public async Task<IEnumerable<User>> GetAllUsersByCompanyAsync(string role, string company)
         {
-            return await _userRepository.GetAllAsync(role, company);
+            return await _userRepository.GetAllUsersByCompanyAsync(role, company);
         }
 
         public async Task AddUserAsync(UserAddUpdate userAddUpdate)
